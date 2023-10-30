@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:unit_test/counter.dart';
+import 'package:http/http.dart' as http;
+import 'package:unit_test/user_model.dart';
+import 'package:unit_test/user_repository.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Unit Test',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -31,13 +34,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Counter counter = Counter();
-
-  void _incrementCounter() {
-    setState(() {
-      counter.incrementCounter();
-    });
-  }
+  Future<UserModel> getUsers = UserRepository(client: http.Client()).getUser();
 
   @override
   Widget build(BuildContext context) {
@@ -46,24 +43,22 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: FutureBuilder<UserModel>(
+        future: getUsers,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator.adaptive(),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Center(
+              child: Text('${snapshot.data}'),
             ),
-            Text(
-              '${counter.count}',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+          );
+        },
       ),
     );
   }
